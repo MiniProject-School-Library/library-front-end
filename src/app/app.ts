@@ -1,12 +1,20 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, OnInit, signal, ViewEncapsulation } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { BooksComponent } from './books/books';
+import { MembersComponent } from './members/members';
+import { RentalsComponent } from './rentals/rentals';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  standalone: true,
+  imports: [CommonModule, BooksComponent, MembersComponent, RentalsComponent],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
+  encapsulation: ViewEncapsulation.None
 })
-export class App {
-  protected readonly title = signal('school_library_FE');
+export class App implements OnInit {
+  activeTab = signal<'books' | 'members' | 'rentals'>('books');
+
+  ngOnInit() {
+  }
 }

@@ -1,0 +1,192 @@
+<div class="animate-fade-in">
+  <div class="header-container">
+    <div class="page-title">
+      <h2>Transaksi Sewa & Kembali</h2>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openRentModal()" style="height: 38px;">
+        <i class="material-icons-round">bookmark_add</i> Sewa Buku Baru
+      </button>
+    </div>
+  </div>
+
+  <div class="table-panel glass-panel">
+    <div class="table-filter-bar">
+      <div class="search-box">
+        <i class="material-icons-round">search</i>
+        <input type="text" placeholder="Cari kode sewa, nama anggota, judul buku..." [ngModel]="rentalSearchQuery()"
+          (ngModelChange)="rentalSearchQuery.set($event)">
+      </div>
+      <div style="color: var(--text-secondary); font-size: 0.85rem;">
+        Total: {{ filteredRentals().length }} transaksi
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Kode Sewa</th>
+            <th>Anggota</th>
+            <th>Buku Yang Dipinjam</th>
+            <th>Tgl Pinjam</th>
+            <th>Batas Kembali</th>
+            <th>Tgl Kembali</th>
+            <th>Denda</th>
+            <th>Status</th>
+            <th style="text-align: center;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (rent of filteredRentals(); track rent.id) {
+          <tr>
+            <td style="font-weight: 700; color: var(--accent-blue);">{{ rent.rentCode }}</td>
+            <td>
+              <div style="font-weight: 600;">{{ rent.memberName }}</div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ rent.memberCode }}</div>
+            </td>
+            <td>
+              <div style="font-weight: 600;">{{ rent.bookTitle }}</div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ rent.bookCode }}</div>
+            </td>
+            <td>{{ formatDate(rent.rentDate) }}</td>
+            <td>{{ formatDate(rent.dueDate) }}</td>
+            <td>{{ rent.returnDate ? formatDate(rent.returnDate) : '-' }}</td>
+            <td>
+              @if (rent.fineAmount && rent.fineAmount > 0) {
+              <span style="color: var(--accent-rose); font-weight: 700;">Rp {{ formatNumber(rent.fineAmount)
+                }}</span>
+              } @else {
+              <span style="color: var(--text-muted);">-</span>
+              }
+            </td>
+            <td>
+              <span class="badge" [class.success]="rent.status === 'RETURNED'"
+                [class.warning]="rent.status === 'RENTED'">
+                {{ rent.status === 'RETURNED' ? 'KEMBALI' : 'DIPINJAM' }}
+              </span>
+            </td>
+            <td style="text-align: center;">
+              @if (rent.status === 'RENTED') {
+              <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;"
+                (click)="openReturnModal(rent)">
+                Kembalikan
+              </button>
+              } @else {
+              <span style="color: var(--text-muted); font-size: 0.8rem;">Selesai</span>
+              }
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 32px 0;">
+              <i class="material-icons-round"
+                style="font-size: 32px; display: block; margin-bottom: 8px;">history</i>
+              Belum ada transaksi peminjaman tercatat.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (showRentModal()) {
+<div class="modal-overlay">
+  <div class="modal-content glass-panel">
+    <div class="modal-header">
+      <h3>Formulir Sewa Buku Baru</h3>
+      <button class="modal-close" (click)="showRentModal.set(false)">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Pilih Anggota</label>
+        <select [ngModel]="rentForm.memberId()" (ngModelChange)="rentForm.memberId.set($event)">
+          <option [value]="null" disabled selected>-- Pilih Anggota --</option>
+          @for (member of members(); track member.id) {
+          <option [value]="member.id">{{ member.name }} ({{ member.memberCode }})</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Pilih Buku</label>
+        <select [ngModel]="rentForm.bookId()" (ngModelChange)="rentForm.bookId.set($event)">
+          <option [value]="null" disabled selected>-- Pilih Buku --</option>
+          @for (book of books(); track book.id) {
+          <option [value]="book.id" [disabled]="(book.availableQty || 0) <= 0">
+            {{ book.title }} [Stok: {{ book.availableQty }}] ({{ book.bookCode }})
+          </option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Tanggal Pinjam</label>
+        <input type="date" [ngModel]="rentForm.rentDate()" (ngModelChange)="rentForm.rentDate.set($event)">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="showRentModal.set(false)">Batal</button>
+      <button class="btn btn-primary" (click)="saveRent()">Konfirmasi Sewa</button>
+    </div>
+  </div>
+</div>
+}
+
+@if (showReturnModal()) {
+<div class="modal-overlay">
+  <div class="modal-content glass-panel" style="max-width: 440px;">
+    <div class="modal-header">
+      <h3>Proses Pengembalian Buku</h3>
+      <button class="modal-close" (click)="showReturnModal.set(false)">&times;</button>
+    </div>
+    <div class="modal-body">
+      @if (returnForm.selectedRentDetails(); as rent) {
+      <div class="glass-panel" style="padding: 12px; margin-bottom: 16px; background: #f9fafb;">
+        <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Kode Sewa: <strong>{{
+            rent.rentCode }}</strong></div>
+        <hr style="margin: 8px 0; border: none; border-top: 1px solid var(--border-color);">
+        <div style="display: grid; grid-template-columns: 1fr; gap: 6px; font-size: 0.85rem;">
+          <div>Anggota: <strong>{{ rent.memberName }}</strong></div>
+          <div>Buku: <strong>{{ rent.bookTitle }}</strong></div>
+          <div>Tanggal Pinjam: <strong>{{ formatDate(rent.rentDate) }}</strong></div>
+          <div>Jatuh Tempo: <strong style="color: var(--accent-amber);">{{ formatDate(rent.dueDate) }}</strong></div>
+        </div>
+      </div>
+      }
+
+      <div style="padding: 10px 0 4px; font-size: 0.85rem; color: var(--text-secondary);">
+        <i class="material-icons-round" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">today</i>
+        Tanggal pengembalian otomatis diset ke hari ini.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="showReturnModal.set(false)">Batal</button>
+      <button class="btn btn-primary" (click)="processReturn()">Selesaikan Pengembalian</button>
+    </div>
+  </div>
+</div>
+}
+
+<div class="toast-container">
+  @if (toastMessage()) {
+  <div class="toast" [class.success]="toastType() === 'success'" [class.error]="toastType() === 'error'"
+    [class.info]="toastType() === 'info'">
+    <div class="toast-icon">
+      @if (toastType() === 'success') { <i class="material-icons-round">check_circle</i> }
+      @if (toastType() === 'error') { <i class="material-icons-round">error</i> }
+      @if (toastType() === 'info') { <i class="material-icons-round">notifications</i> }
+    </div>
+    <div>{{ toastMessage() }}</div>
+  </div>
+  }
+</div>
+
+@if (loading()) {
+<div class="loading-overlay">
+  <div class="spinner"></div>
+  <span class="loading-text">Menyinkronkan data...</span>
+</div>
+}

@@ -1,0 +1,143 @@
+<div class="animate-fade-in">
+  <div class="header-container">
+    <div class="page-title">
+      <h2>Katalog Buku</h2>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openAddBookModal()" style="height: 38px;">
+        <i class="material-icons-round">add</i> Tambah Buku
+      </button>
+    </div>
+  </div>
+
+  <div class="table-panel glass-panel">
+    <div class="table-filter-bar">
+      <div class="search-box">
+        <i class="material-icons-round">search</i>
+        <input type="text" placeholder="Cari judul, penulis, penerbit, kode..." [ngModel]="bookSearchQuery()"
+          (ngModelChange)="bookSearchQuery.set($event)">
+      </div>
+      <div style="color: var(--text-secondary); font-size: 0.85rem;">
+        Total: {{ filteredBooks().length }} buku
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Kode</th>
+            <th>Judul Buku</th>
+            <th>Penulis</th>
+            <th>Penerbit</th>
+            <th>Tahun</th>
+            <th style="text-align: center;">Tersedia / Total</th>
+            <th style="text-align: center;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (book of filteredBooks(); track book.id) {
+          <tr>
+            <td style="font-weight: 700; color: var(--accent-blue);">{{ book.bookCode }}</td>
+            <td>
+              <div style="font-weight: 600;">{{ book.title }}</div>
+            </td>
+            <td>{{ book.author }}</td>
+            <td>{{ book.publisher }}</td>
+            <td>{{ book.publishYear }}</td>
+            <td style="text-align: center;">
+              <span class="badge" [class.success]="(book.availableQty || 0) > 0"
+                [class.danger]="(book.availableQty || 0) <= 0">
+                {{ book.availableQty }} / {{ book.stock }} Ready
+              </span>
+            </td>
+            <td style="text-align: center;">
+              <div style="display: flex; gap: 4px; justify-content: center;">
+                <button class="btn-action edit" (click)="openEditBookModal(book)" title="Edit">
+                  <i class="material-icons-round" style="font-size: 16px;">edit</i>
+                </button>
+                <button class="btn-action delete" (click)="deleteBook(book.id)" title="Hapus">
+                  <i class="material-icons-round" style="font-size: 16px;">delete</i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 32px 0;">
+              <i class="material-icons-round"
+                style="font-size: 32px; display: block; margin-bottom: 8px;">search_off</i>
+              Tidak ada data buku yang ditemukan.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (showBookModal()) {
+<div class="modal-overlay">
+  <div class="modal-content glass-panel">
+    <div class="modal-header">
+      <h3>{{ editingBookId() ? 'Ubah Informasi Buku' : 'Tambah Buku Baru' }}</h3>
+      <button class="modal-close" (click)="showBookModal.set(false)">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Judul Buku</label>
+        <input type="text" placeholder="Judul lengkap..." [ngModel]="bookForm.title()"
+          (ngModelChange)="bookForm.title.set($event)">
+      </div>
+      <div class="form-group">
+        <label>Penulis / Pengarang</label>
+        <input type="text" placeholder="Penulis..." [ngModel]="bookForm.author()"
+          (ngModelChange)="bookForm.author.set($event)">
+      </div>
+      <div class="form-group">
+        <label>Penerbit</label>
+        <input type="text" placeholder="Penerbit..." [ngModel]="bookForm.publisher()"
+          (ngModelChange)="bookForm.publisher.set($event)">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tahun Terbit</label>
+          <input type="number" placeholder="2024" [ngModel]="bookForm.publishYear()"
+            (ngModelChange)="bookForm.publishYear.set($event)">
+        </div>
+        <div class="form-group">
+          <label>Total Stok</label>
+          <input type="number" min="1" placeholder="1" [ngModel]="bookForm.stock()"
+            (ngModelChange)="bookForm.stock.set($event)">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="showBookModal.set(false)">Batal</button>
+      <button class="btn btn-primary" (click)="saveBook()">Simpan</button>
+    </div>
+  </div>
+</div>
+}
+
+<div class="toast-container">
+  @if (toastMessage()) {
+  <div class="toast" [class.success]="toastType() === 'success'" [class.error]="toastType() === 'error'"
+    [class.info]="toastType() === 'info'">
+    <div class="toast-icon">
+      @if (toastType() === 'success') { <i class="material-icons-round">check_circle</i> }
+      @if (toastType() === 'error') { <i class="material-icons-round">error</i> }
+      @if (toastType() === 'info') { <i class="material-icons-round">notifications</i> }
+    </div>
+    <div>{{ toastMessage() }}</div>
+  </div>
+  }
+</div>
+
+@if (loading()) {
+<div class="loading-overlay">
+  <div class="spinner"></div>
+  <span class="loading-text">Menyinkronkan data...</span>
+</div>
+}
