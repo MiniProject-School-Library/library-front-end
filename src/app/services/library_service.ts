@@ -58,7 +58,7 @@ export interface Rent {
 })
 export class LibraryService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api';
+  private apiUrl = `${process.env.ANGULAR_PUBLIC_URL_API}/api`;
 
   getBooks(): Observable<Book[]> {
     return this.http.get<WebResponse<Book[]>>(`${this.apiUrl}/books`).pipe(

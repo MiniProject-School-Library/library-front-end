@@ -27,10 +27,16 @@
             ],
             "styles": [
               "src/styles.css"
-            ]
+            ],
+            "define": {
+              "process.env.ANGULAR_PUBLIC_URL_API": "\"http://localhost:8080\""
+            }
           },
           "configurations": {
             "production": {
+              "define": {
+                "process.env.ANGULAR_PUBLIC_URL_API": "\"https://library-school-service.onrender.com\""
+              },
               "budgets": [
                 {
                   "type": "initial",
