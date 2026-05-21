@@ -87,17 +87,17 @@
     <div class="modal-body">
       <div class="form-group">
         <label>Judul Buku</label>
-        <input type="text" placeholder="Judul lengkap..." [ngModel]="bookForm.title()"
+        <input type="text" placeholder="Judul lengkap" [ngModel]="bookForm.title()"
           (ngModelChange)="bookForm.title.set($event)">
       </div>
       <div class="form-group">
         <label>Penulis / Pengarang</label>
-        <input type="text" placeholder="Penulis..." [ngModel]="bookForm.author()"
+        <input type="text" placeholder="Penulis" [ngModel]="bookForm.author()"
           (ngModelChange)="bookForm.author.set($event)">
       </div>
       <div class="form-group">
         <label>Penerbit</label>
-        <input type="text" placeholder="Penerbit..." [ngModel]="bookForm.publisher()"
+        <input type="text" placeholder="Penerbit" [ngModel]="bookForm.publisher()"
           (ngModelChange)="bookForm.publisher.set($event)">
       </div>
       <div class="form-row">
